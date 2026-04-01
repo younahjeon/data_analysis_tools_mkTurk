@@ -1,6 +1,8 @@
 import pickle
 import numpy as np
 import math
+import os
+import matplotlib.pyplot as plt
 
 def load_data(n_chan,MUA_dir):
     # loads spike times, peak values of detected spikes, waveform 
@@ -93,11 +95,13 @@ def get_data_bystim(n_chan, MUA_dir, stim_info_path, t_before = 0.1, t_after = 0
             ch_sl_stim[stim].append(sl[ind])
             ch_ind_stim[stim].append(ind)
             
-            if stim_info_sess[stim]['present_bool'][i] == 0 or math.isnan(t_on):
-                ch_psth_stim[stim][i,:] =np.nan * np.ones(len(psth_bins)-1)
-            else:
-                ch_psth_stim[stim][i,:], _ =  np.histogram(st[ind]-t_on, psth_bins)
-                n_trials +=1
+            # if stim_info_sess[stim]['present_bool'][i] == 0 or math.isnan(t_on):
+            #     ch_psth_stim[stim][i,:] =np.nan * np.ones(len(psth_bins)-1)
+            # else:
+            #     ch_psth_stim[stim][i,:], _ =  np.histogram(st[ind]-t_on, psth_bins)
+            #     n_trials +=1
+            ch_psth_stim[stim][i,:], _ =  np.histogram(st[ind]-t_on, psth_bins)
+            n_trials +=1
 
         ch_psth_stim_meta[stim]['n_trials'] = n_trials
 
@@ -148,3 +152,56 @@ def get_data_bl(n_chan, MUA_dir, data_dict_path,stim_info_path, t_before = 0.2, 
         ch_psth_bl_stim[stim] = ch_psth_bl[stim_info_sess[stim]['stim_ind']]
 
     return ch_psth_bl, ch_psth_bl_meta,ch_psth_bl_stim
+
+
+def gen_psth_byscenefile(n_chan,save_out_path, psth, psth_meta,chanmap):
+    if not (save_out_path / 'plots_psth_byscenefile').exists():
+        print('creating plot directory')
+        os.makedirs(save_out_path / 'plots_psth_byscenefile',exist_ok= True)
+
+    max_fr_all = []
+    for s in psth:
+        n_trials = np.sum([1 for p in psth[s] if not np.isnan(p).all() ])
+        psth_mean = np.nanmean(psth[s], axis=0)
+        # error bars 
+        psth_sem = np.nanstd(psth[s], axis=0)/np.sqrt(n_trials)
+
+        max_fr_all.append(np.nanmax(psth_mean + psth_sem))
+
+    max_fr = np.nanmax(max_fr_all)
+
+    n_cols = math.ceil(len(psth)/2)
+    n_rows = 2
+
+    plot_width = 15/4 * n_cols
+    plot_height = 15/4 * n_rows
+    fig, axs = plt.subplots(nrows= n_rows,ncols = n_cols, figsize = (plot_width,plot_height))
+
+
+    for n,s in enumerate(psth):
+        n_trials = np.sum([1 for p in psth[s] if not np.isnan(p).all() ])
+        psth_mean = np.nanmean(psth[s], axis=0)
+        # error bars 
+        psth_sem = np.nanstd(psth[s], axis=0)/np.sqrt(n_trials)
+
+        bincents = psth_meta[s]['psth_bins'] - psth_meta[s]['binwidth']/2
+        bincents = bincents[1:]
+        
+        ax = axs.ravel()[n]
+        ax.plot(bincents, psth_mean)
+        ax.fill_between(bincents, psth_mean-psth_sem, psth_mean+psth_sem,
+            alpha=0.2)
+        ax.set_xlabel('Time (s)')
+        ax.set_ylabel('FR (spks/sec)')
+        ax.set_xlim([-psth_meta[s]['t_before'], psth_meta[s]['stim_dur']+ psth_meta[s]['t_after']])
+        ax.set_ylim([0,max_fr])
+        ax.set_title(Path.Path(s).stem + '\n' + str(n_trials) + ' trials ')
+
+    print(n_chan,int(np.where(np.argsort(chanmap[:,1]) == n_chan)[0]))
+    fig.suptitle('ch{:0>3d} \n '.format(int(np.where(np.argsort(chanmap[:,1]) == n_chan)[0])))
+    fig.tight_layout()
+    plt.subplots_adjust(wspace = 1)
+    filename = 'ch{:0>3d}.png'.format(int(np.where(np.argsort(chanmap[:,1]) == n_chan)[0]))
+
+    plt.savefig(save_out_path / 'plots_psth_byscenefile'/ filename, bbox_inches = 'tight')  
+    plt.close()
