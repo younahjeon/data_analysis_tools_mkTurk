@@ -54,3 +54,6 @@ bashfiles/analyze_bystim_West_20230911 0
 ```
 
 3. **master_process.sbatch** will run 1000 jobs in total (max in axon, otherwise in an ideal setting you can set this to the total number of lines in **all_tasks.txt**), and each job will run appropriate number of lines of **all_tasks.txt**
+
+## behavior_processing.py
+Contains functions to sort mkTurk datafiles by tasks, and create a trial-based arrays
