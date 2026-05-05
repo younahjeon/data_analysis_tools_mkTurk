@@ -4,8 +4,8 @@ import pathlib as Path
 import os
 import sys
 import numpy as np
-from utils_ephys import * 
-from utils_meta import * 
+from utils.utils_ephys import * 
+from utils.utils_meta import * 
 from joblib import Parallel, delayed
 
 

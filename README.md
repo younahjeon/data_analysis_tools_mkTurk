@@ -88,6 +88,50 @@ Runs up to 1000 jobs (the Axon cluster maximum). In an unconstrained environment
 
 ---
 
+## `waveform_characterization_bydepth.py`
+
+Computes and plots waveform features as a function of recording depth, aligned to trial-averaged LFP and z-scored PSTH across all Neuropixels channels. Inspired by [Zhang et al. (2024) eLife](https://doi.org/10.7554/eLife.97290.2).
+
+### Usage
+
+```bash
+python waveform_characterization_bydepth.py <n_chan> <monkey> <date>
+```
+
+| Argument | Description |
+| --- | --- |
+| `n_chan` | Total number of AP channels recorded (int) |
+| `monkey` | Subject identifier, e.g. `'Pogo'` |
+| `date` | Recording date string matching the data directory name |
+
+### Prerequisites
+
+The following files must already exist in the session's save directory before running:
+
+| File | Source |
+| --- | --- |
+| `stim_info_sess` | `get_data_dict_from_mkturk.ipynb` |
+| `LFP/lfp_mat.npz` | LFP preprocessing pipeline |
+| `wf_features.npz` | Waveform feature extraction pipeline |
+| `psth_scenefile_meta`, `psth_*` | `analyze_bystim.py` |
+| `brain_boundary.npy` | Optional — defaults to channel 383 if absent |
+
+### Output figure
+
+Saves a 5-panel figure (`waveform_features.png`) to the session plot directory and to the shared `laminar_characterization` directory.
+
+| Panel | Content |
+| --- | --- |
+| 1 | z-scored PSTH heatmap vs depth for the highest-response scenefile |
+| 2 | Mean spike peak/trough ratio vs depth |
+| 3 | Mean spike height (µV) vs depth |
+| 4 | Trial-averaged, CAR-corrected raw LFP traces vs depth |
+| 5 | Paxinos marmoset atlas slice with probe placement overlay |
+
+![waveform_features_bydepth_example](assets/waveform_features_bydepth_example.png)
+
+---
+
 ## `behavior_processing.py`
 
 Contains functions to sort mkTurk datafiles by tasks, and create trial-based arrays.

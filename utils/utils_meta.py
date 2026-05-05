@@ -7,7 +7,7 @@ import re
 from natsort import os_sorted
 import pickle
 import json
-from utils_mkturk import * 
+from utils.utils_mkturk import * 
 import socket
 from dataclasses import dataclass
 from SpikeGLX_Datafile_Tools.Python.DemoReadSGLXData.readSGLX import readMeta 
